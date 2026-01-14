@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+*.xcworkspace/
+xcuserdata/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Build artifacts
+dist/
+*.app
+*.dmg
+
+# V2Ray downloads
+V2RayUSA/Resources/v2ray
+
+# Swift
+.build/
+*.swiftpm
+
+# Conda
+*.pyc
+__pycache__/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+/tmp/

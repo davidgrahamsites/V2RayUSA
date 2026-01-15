@@ -14,17 +14,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var v2rayManager = V2RayManager.shared
     
     func applicationDidFinishLaunching(_ notification: Notification) {
+        print("🚀 V2RayUSA: applicationDidFinishLaunching called")
+        
         // Create menubar status item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        print("📍 V2RayUSA: statusItem created: \(statusItem != nil)")
         
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "V2Ray")
+            button.title = "🔒"  // Use emoji instead of SF Symbol for better compatibility
             button.action = #selector(togglePopover)
             button.target = self
+            print("✅ V2RayUSA: button configured with title")
+        } else {
+            print("❌ V2RayUSA: statusItem.button is nil!")
         }
         
         // Create menu
         setupMenu()
+        print("✅ V2RayUSA: menu setup complete")
         
         // Observer for connection status changes
         NotificationCenter.default.addObserver(
@@ -35,6 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         
         updateStatusIcon()
+        print("✅ V2RayUSA: initialization complete - menubar icon should be visible")
     }
     
     func applicationWillTerminate(_ notification: Notification) {
@@ -45,13 +53,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         
         // Connection status
-        let statusItem = NSMenuItem(
+        let statusMenuItem = NSMenuItem(
             title: v2rayManager.isConnected ? "🟢 Connected" : "🔴 Disconnected",
             action: nil,
             keyEquivalent: ""
         )
-        statusItem.isEnabled = false
-        menu.addItem(statusItem)
+        statusMenuItem.isEnabled = false
+        menu.addItem(statusMenuItem)
         
         menu.addItem(NSMenuItem.separator())
         
@@ -86,7 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         quitItem.target = self
         menu.addItem(quitItem)
         
-        statusItem.menu = menu
+        self.statusItem.menu = menu
     }
     
     @objc private func togglePopover() {
@@ -121,9 +129,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             guard let self = self else { return }
             if let button = self.statusItem.button {
                 if self.v2rayManager.isConnected {
-                    button.image = NSImage(systemSymbolName: "lock.shield.fill", accessibilityDescription: "V2Ray Connected")
+                    button.title = "🔓"  // Open lock when connected
                 } else {
-                    button.image = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "V2Ray")
+                    button.title = "🔒"  // Closed lock when disconnected
                 }
             }
             self.setupMenu()

@@ -26,7 +26,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 	objects = {
 
 /* Begin PBXBuildFile section */
-		00000001 /* V2RayUSAApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000001 /* V2RayUSAApp.swift */; };
+		00000001 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000001 /* main.swift */; };
 		00000002 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000002 /* AppDelegate.swift */; };
 		00000003 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000003 /* PreferencesView.swift */; };
 		00000004 /* V2RayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000004 /* V2RayManager.swift */; };
@@ -37,7 +37,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		10000001 /* V2RayUSAApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = V2RayUSAApp.swift; sourceTree = "<group>"; };
+		10000001 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		10000002 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		10000003 /* PreferencesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		10000004 /* V2RayManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = V2RayManager.swift; sourceTree = "<group>"; };
@@ -72,7 +72,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 		50000002 /* V2RayUSA */ = {
 			isa = PBXGroup;
 			children = (
-				10000001 /* V2RayUSAApp.swift */,
+				10000001 /* main.swift */,
 				10000002 /* AppDelegate.swift */,
 				50000003 /* Views */,
 				50000004 /* Managers */,
@@ -190,7 +190,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				00000001 /* V2RayUSAApp.swift in Sources */,
+				00000001 /* main.swift in Sources */,
 				00000002 /* AppDelegate.swift in Sources */,
 				00000003 /* PreferencesView.swift in Sources */,
 				00000004 /* V2RayManager.swift in Sources */,

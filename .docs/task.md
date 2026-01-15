@@ -53,3 +53,13 @@
 - [/] Test app launch on clean macOS
 - [/] Validate VPN functionality
 - [x] Create walkthrough document
+
+## Debugging & Fixes (Jan 15)
+- [x] Investigate menubar icon not appearing
+- [x] Fix Swift keyword conflict (`protocol`)
+- [x] Fix variable name collision in AppDelegate
+- [x] Convert from SwiftUI App to traditional AppKit
+- [x] Implement proper activation policy for menubar apps
+- [x] Replace SF Symbols with emoji icons
+- [x] Update Xcode project generation for new architecture
+- [x] Commit all fixes to Git

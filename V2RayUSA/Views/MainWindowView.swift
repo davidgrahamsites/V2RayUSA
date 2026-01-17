@@ -17,6 +17,7 @@ struct MainWindowView: View {
     @State private var showingLogs = false
     @State private var selectedSourceIndex = 0
     @State private var routingMode: RoutingMode = .normal
+    @State private var vmessPasteText: String = ""
     
     enum RoutingMode: String, CaseIterable {
         case normal = "Normal"
@@ -323,6 +324,44 @@ struct MainWindowView: View {
                 Text("✅ Found \(subscriptionManager.servers.count) servers")
                     .font(.caption)
                     .foregroundColor(.green)
+            }
+            
+            Divider()
+                .background(Color.white.opacity(0.2))
+                .padding(.vertical, 8)
+            
+            // Manual vmess:// paste (for users behind GFW)
+            Text("📝 Or Paste vmess:// Link")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.8))
+            
+            HStack(spacing: 8) {
+                TextField("vmess://...", text: $vmessPasteText)
+                    .textFieldStyle(.plain)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.white.opacity(0.1))
+                    )
+                
+                Button(action: {
+                    if let config = subscriptionManager.parseVMessURI(vmessPasteText) {
+                        subscriptionManager.servers.insert(config, at: 0)
+                        vmessPasteText = ""
+                    }
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(
+                            Circle()
+                                .fill(LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing))
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(vmessPasteText.isEmpty)
             }
         }
         .padding(16)

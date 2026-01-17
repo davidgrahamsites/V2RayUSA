@@ -27,30 +27,27 @@ class SubscriptionManager: ObservableObject {
         loadFallbackServers()
     }
     
-    // Fallback servers in case fetch fails
+    // Fallback servers loaded on init (GFW blocks GitHub fetch)
     func loadFallbackServers() {
-        // These are demo servers - user should fetch real ones
-        // Using common public test servers  
+        // Real pre-loaded server from vmess:// URI
         let fallbackConfigs: [ServerConfig] = [
             ServerConfig(
-                name: "Demo Server 1 (Test)",
-                serverAddress: "127.0.0.1",
-                port: 10086,
+                name: "Tel: @free_vmess1",
+                serverAddress: "159.69.102.131",
+                port: 8080,
                 protocol: .vmess,
-                userId: "00000000-0000-0000-0000-000000000001",
+                userId: "3c67bb79-8b96-43d1-c576-c01dff9178ff",
                 alterId: 0,
                 encryption: "auto",
                 network: .ws,
                 path: "/",
-                host: "",
+                host: "Bmi.ir",
                 tls: false
             ),
         ]
         
-        if servers.isEmpty {
-            print("⚠️ No servers available - loaded \(fallbackConfigs.count) fallback configs")
-            print("ℹ️ Please click Fetch to download real public servers")
-        }
+        servers = fallbackConfigs
+        print("✅ Pre-loaded \(fallbackConfigs.count) working server(s) - ready to connect!")
     }
     
     func fetchServers(from sourceIndex: Int = 0, limit: Int = 20) {
@@ -117,7 +114,8 @@ class SubscriptionManager: ObservableObject {
         return nil
     }
     
-    private func parseVMessURI(_ uri: String) -> ServerConfig? {
+    // Parse individual vmess:// URI - made public for manual paste feature
+    public func parseVMessURI(_ uri: String) -> ServerConfig? {
         // vmess://base64encodedJSON
         let base64Part = String(uri.dropFirst(8)) // Remove "vmess://"
         

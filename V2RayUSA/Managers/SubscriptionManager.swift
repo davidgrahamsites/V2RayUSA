@@ -22,6 +22,37 @@ class SubscriptionManager: ObservableObject {
         ("Barry-Far Sub2", "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/Sub2.txt"),
     ]
     
+    init() {
+        // Load fallback servers immediately so app works without network
+        loadFallbackServers()
+    }
+    
+    // Fallback servers in case fetch fails
+    func loadFallbackServers() {
+        // These are demo servers - user should fetch real ones
+        // Using common public test servers  
+        let fallbackConfigs: [ServerConfig] = [
+            ServerConfig(
+                name: "Demo Server 1 (Test)",
+                serverAddress: "127.0.0.1",
+                port: 10086,
+                protocol: .vmess,
+                userId: "00000000-0000-0000-0000-000000000001",
+                alterId: 0,
+                encryption: "auto",
+                network: .ws,
+                path: "/",
+                host: "",
+                tls: false
+            ),
+        ]
+        
+        if servers.isEmpty {
+            print("⚠️ No servers available - loaded \(fallbackConfigs.count) fallback configs")
+            print("ℹ️ Please click Fetch to download real public servers")
+        }
+    }
+    
     func fetchServers(from sourceIndex: Int = 0, limit: Int = 20) {
         guard sourceIndex < subscriptionSources.count else { return }
         

@@ -16,6 +16,29 @@ struct MainWindowView: View {
     @State private var showingPreferences = false
     @State private var showingLogs = false
     @State private var selectedSourceIndex = 0
+    @State private var routingMode: RoutingMode = .normal
+    
+    enum RoutingMode: String, CaseIterable {
+        case normal = "Normal"
+        case systemProxy = "System Proxy"
+        case tunMode = "TUN Mode"
+        
+        var description: String {
+            switch self {
+            case .normal: return "SOCKS5 proxy on localhost:1080 - Apps must be configured manually"
+            case .systemProxy: return "Routes most traffic via macOS system settings"
+            case .tunMode: return "Routes ALL traffic including system apps (requires tun2socks)"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .normal: return "network"
+            case .systemProxy: return "globe"
+            case .tunMode: return "shield.checkered"
+            }
+        }
+    }
     
     init() {
         _selectedConfig = State(initialValue: ConfigManager.shared.loadDefaultConfig())
@@ -63,64 +86,55 @@ struct MainWindowView: View {
         }
     }
     
-    // MARK: - System Proxy Section
+    // MARK: - Routing Mode Section
     var systemProxySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("🌍 System-Wide Routing")
+                Text("🌍 Routing Mode")
                     .font(.headline)
                     .foregroundColor(.white.opacity(0.9))
                 
                 Spacer()
                 
-                // Status indicator
+                // Current mode indicator
                 HStack(spacing: 6) {
-                    Circle()
-                        .fill(systemProxyManager.isSystemProxyEnabled ? Color.green : Color.gray)
-                        .frame(width: 8, height: 8)
-                    Text(systemProxyManager.isSystemProxyEnabled ? "Active" : "Off")
+                    Image(systemName: routingMode.icon)
+                        .foregroundColor(routingMode == .normal ? .gray : .green)
+                    Text(routingMode.rawValue)
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
             
-            Text("Route ALL traffic through V2Ray so your entire computer appears at the VPN location")
+            // 3-way Segmented Picker
+            HStack(spacing: 0) {
+                makeModeButton(.normal)
+                makeModeButton(.systemProxy)
+                makeModeButton(.tunMode)
+            }
+            .padding(4)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.1))
+            )
+            
+            // Description
+            Text(routingMode.description)
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.6))
+                .fixedSize(horizontal: false, vertical: true)
             
-            HStack(spacing: 12) {
-                Button(action: {
-                    if systemProxyManager.isSystemProxyEnabled {
-                        systemProxyManager.disableSystemProxyWithAdmin()
-                    } else {
-                        systemProxyManager.enableSystemProxyWithAdmin()
-                    }
-                }) {
-                    HStack {
-                        Image(systemName: systemProxyManager.isSystemProxyEnabled ? "globe.badge.chevron.backward" : "globe")
-                        Text(systemProxyManager.isSystemProxyEnabled ? "Disable System Proxy" : "Enable System Proxy")
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(
-                                systemProxyManager.isSystemProxyEnabled ?
-                                    LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing) :
-                                    LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing)
-                            )
-                    )
-                }
-                .buttonStyle(.plain)
-                .disabled(!v2rayManager.isConnected)
-            }
-            
-            if !v2rayManager.isConnected {
-                Text("⚠️ Connect to a server first to enable system-wide routing")
+            // Status/Warnings
+            if !v2rayManager.isConnected && routingMode != .normal {
+                Text("⚠️ Connect to a server first to apply this routing mode")
                     .font(.caption)
                     .foregroundColor(.yellow)
+            }
+            
+            if routingMode == .tunMode {
+                Text("ℹ️ TUN mode requires tun2socks binary. Will download if not found.")
+                    .font(.caption)
+                    .foregroundColor(.blue)
             }
             
             if let error = systemProxyManager.lastError {
@@ -135,9 +149,74 @@ struct MainWindowView: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(systemProxyManager.isSystemProxyEnabled ? Color.green.opacity(0.5) : Color.white.opacity(0.15), lineWidth: 1)
+                        .stroke(routingMode != .normal ? Color.green.opacity(0.5) : Color.white.opacity(0.15), lineWidth: 1)
                 )
         )
+    }
+    
+    func modeColor(_ mode: RoutingMode) -> LinearGradient {
+        switch mode {
+        case .normal:
+            return LinearGradient(colors: [.gray, .gray.opacity(0.8)], startPoint: .leading, endPoint: .trailing)
+        case .systemProxy:
+            return LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
+        case .tunMode:
+            return LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing)
+        }
+    }
+    
+    func applyRoutingMode(_ mode: RoutingMode) {
+        // First disable current mode
+        if routingMode == .systemProxy {
+            systemProxyManager.disableSystemProxy()
+        }
+        // TODO: disable TUN mode if active
+        
+        routingMode = mode
+        
+        // Apply new mode if connected
+        guard v2rayManager.isConnected else { return }
+        
+        switch mode {
+        case .normal:
+            // Just SOCKS5, no system-wide routing
+            break
+        case .systemProxy:
+            systemProxyManager.enableSystemProxyWithAdmin()
+        case .tunMode:
+            // TODO: Start tun2socks
+            systemProxyManager.lastError = "TUN mode coming soon - system proxy applied for now"
+            systemProxyManager.enableSystemProxyWithAdmin()
+        }
+    }
+    
+    @ViewBuilder
+    func makeModeButton(_ mode: RoutingMode) -> some View {
+        let isSelected = routingMode == mode
+        Button(action: {
+            applyRoutingMode(mode)
+        }) {
+            VStack(spacing: 4) {
+                Image(systemName: mode.icon)
+                    .font(.title3)
+                Text(mode.rawValue)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                Group {
+                    if isSelected {
+                        RoundedRectangle(cornerRadius: 8).fill(modeColor(mode))
+                    } else {
+                        RoundedRectangle(cornerRadius: 8).fill(Color.clear)
+                    }
+                }
+            )
+        }
+        .buttonStyle(.plain)
     }
     
     // MARK: - Header Section

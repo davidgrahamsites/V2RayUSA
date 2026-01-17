@@ -32,6 +32,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 		00000009 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000009 /* MainWindowView.swift */; };
 		00000004 /* V2RayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000004 /* V2RayManager.swift */; };
 		00000005 /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000005 /* ConfigManager.swift */; };
+		00000010 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000010 /* SubscriptionManager.swift */; };
 		00000006 /* ServerConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000006 /* ServerConfig.swift */; };
 		00000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10000007 /* Assets.xcassets */; };
 		00000008 /* v2ray in Resources */ = {isa = PBXBuildFile; fileRef = 10000008 /* v2ray */; };
@@ -44,6 +45,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 		10000009 /* MainWindowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		10000004 /* V2RayManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = V2RayManager.swift; sourceTree = "<group>"; };
 		10000005 /* ConfigManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigManager.swift; sourceTree = "<group>"; };
+		10000010 /* SubscriptionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		10000006 /* ServerConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerConfig.swift; sourceTree = "<group>"; };
 		10000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		10000008 /* v2ray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = v2ray; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 			children = (
 				10000004 /* V2RayManager.swift */,
 				10000005 /* ConfigManager.swift */,
+				10000010 /* SubscriptionManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -199,6 +202,7 @@ cat > "${PROJECT_NAME}.xcodeproj/project.pbxproj" << 'PBXPROJ_EOF'
 				00000009 /* MainWindowView.swift in Sources */,
 				00000004 /* V2RayManager.swift in Sources */,
 				00000005 /* ConfigManager.swift in Sources */,
+				00000010 /* SubscriptionManager.swift in Sources */,
 				00000006 /* ServerConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

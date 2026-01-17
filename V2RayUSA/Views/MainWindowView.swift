@@ -2,7 +2,7 @@
 //  MainWindowView.swift
 //  V2RayUSA
 //
-//  Beautiful main window UI with glassmorphism design
+//  Beautiful main window UI with glassmorphism design and server import
 //
 
 import SwiftUI
@@ -10,9 +10,11 @@ import SwiftUI
 struct MainWindowView: View {
     @StateObject private var v2rayManager = V2RayManager.shared
     @StateObject private var configManager = ConfigManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
     @State private var selectedConfig: ServerConfig
     @State private var showingPreferences = false
     @State private var showingLogs = false
+    @State private var selectedSourceIndex = 0
     
     init() {
         _selectedConfig = State(initialValue: ConfigManager.shared.loadDefaultConfig())
@@ -28,120 +30,260 @@ struct MainWindowView: View {
             )
             .ignoresSafeArea()
             
-            VStack(spacing: 30) {
-                // Header
-                VStack(spacing: 10) {
-                    Image(systemName: v2rayManager.isConnected ? "lock.shield.fill" : "lock.shield")
-                        .font(.system(size: 60))
-                        .foregroundStyle(
-                            v2rayManager.isConnected ?
-                                LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                                LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                        .shadow(color: v2rayManager.isConnected ? .green.opacity(0.5) : .blue.opacity(0.5), radius: 20)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    headerSection
                     
-                    Text("V2RayUSA")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                    // Server Import Section
+                    serverImportSection
                     
-                    // Status Badge
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(v2rayManager.isConnected ? Color.green : Color.gray)
-                            .frame(width: 10, height: 10)
-                            .shadow(color: v2rayManager.isConnected ? .green : .clear, radius: 5)
-                        
-                        Text(v2rayManager.isConnected ? "Connected" : "Disconnected")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
+                    // Server Selection
+                    if !subscriptionManager.servers.isEmpty {
+                        serverSelectionSection
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 8)
-                    .background(
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                Capsule()
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                    )
+                    
+                    // Current Server Info
+                    serverInfoSection
+                    
+                    // Action Buttons
+                    actionButtonsSection
                 }
-                .padding(.top, 40)
-                
-                // Server Info Card
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Server Configuration")
-                        .font(.headline)
-                        .foregroundColor(.white.opacity(0.9))
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        InfoRow(label: "Server", value: selectedConfig.serverAddress)
-                        InfoRow(label: "Port", value: "\(selectedConfig.port)")
-                        InfoRow(label: "Protocol", value: selectedConfig.`protocol`.rawValue)
-                        InfoRow(label: "Network", value: selectedConfig.network.rawValue)
-                    }
-                }
-                .padding(20)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                )
-                .padding(.horizontal, 40)
-                
-                Spacer()
-                
-                // Action Buttons
-                VStack(spacing: 16) {
-                    // Connect/Disconnect Button
-                    Button(action: {
-                        if v2rayManager.isConnected {
-                            v2rayManager.stopV2Ray()
-                        } else {
-                            v2rayManager.startV2Ray()
-                        }
-                    }) {
-                        HStack {
-                            Image(systemName: v2rayManager.isConnected ? "stop.circle.fill" : "play.circle.fill")
-                                .font(.title2)
-                            Text(v2rayManager.isConnected ? "Disconnect" : "Connect")
-                                .font(.headline)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(
-                                    v2rayManager.isConnected ?
-                                        LinearGradient(colors: [.red, .orange], startPoint: .leading, endPoint: .trailing) :
-                                        LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
-                                )
-                                .shadow(color: (v2rayManager.isConnected ? Color.red : Color.blue).opacity(0.5), radius: 20, y: 10)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    
-                    // Secondary Actions
-                    HStack(spacing: 12) {
-                        SecondaryButton(icon: "gearshape.fill", title: "Settings") {
-                            showingPreferences = true
-                        }
-                        
-                        SecondaryButton(icon: "doc.text.fill", title: "Logs") {
-                            showingLogs = true
-                        }
-                    }
-                }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 40)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 30)
             }
         }
-        .frame(width: 500, height: 600)
+        .frame(minWidth: 520, minHeight: 700)
+    }
+    
+    // MARK: - Header Section
+    var headerSection: some View {
+        VStack(spacing: 10) {
+            Image(systemName: v2rayManager.isConnected ? "lock.shield.fill" : "lock.shield")
+                .font(.system(size: 50))
+                .foregroundStyle(
+                    v2rayManager.isConnected ?
+                        LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                        LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
+                .shadow(color: v2rayManager.isConnected ? .green.opacity(0.5) : .blue.opacity(0.5), radius: 15)
+            
+            Text("V2RayUSA")
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+            
+            // Status Badge
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(v2rayManager.isConnected ? Color.green : Color.gray)
+                    .frame(width: 10, height: 10)
+                    .shadow(color: v2rayManager.isConnected ? .green : .clear, radius: 5)
+                
+                Text(v2rayManager.isConnected ? "Connected" : "Disconnected")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
+            .background(
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        Capsule()
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
+            )
+        }
+    }
+    
+    // MARK: - Server Import Section
+    var serverImportSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("🌐 Import Public Servers")
+                .font(.headline)
+                .foregroundColor(.white.opacity(0.9))
+            
+            HStack(spacing: 12) {
+                // Source Picker
+                Picker("Source", selection: $selectedSourceIndex) {
+                    ForEach(0..<subscriptionManager.subscriptionSources.count, id: \.self) { index in
+                        Text(subscriptionManager.subscriptionSources[index].name)
+                            .tag(index)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity)
+                
+                // Fetch Button
+                Button(action: {
+                    subscriptionManager.fetchServers(from: selectedSourceIndex, limit: 30)
+                }) {
+                    HStack(spacing: 6) {
+                        if subscriptionManager.isLoading {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Image(systemName: "arrow.down.circle.fill")
+                        }
+                        Text("Fetch")
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(LinearGradient(colors: [.purple, .blue], startPoint: .leading, endPoint: .trailing))
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(subscriptionManager.isLoading)
+            }
+            
+            if let error = subscriptionManager.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+            
+            if !subscriptionManager.servers.isEmpty {
+                Text("✅ Found \(subscriptionManager.servers.count) servers")
+                    .font(.caption)
+                    .foregroundColor(.green)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+        )
+    }
+    
+    // MARK: - Server Selection Section
+    var serverSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("📡 Select Server")
+                .font(.headline)
+                .foregroundColor(.white.opacity(0.9))
+            
+            Menu {
+                ForEach(subscriptionManager.servers) { server in
+                    Button(action: {
+                        selectedConfig = server
+                        configManager.saveConfig(server)
+                    }) {
+                        Text("\(server.`protocol`.rawValue.uppercased()) - \(server.name)")
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selectedConfig.name)
+                        .foregroundColor(.white)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white.opacity(0.1))
+                )
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+        )
+    }
+    
+    // MARK: - Server Info Section
+    var serverInfoSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("⚡ Current Configuration")
+                .font(.headline)
+                .foregroundColor(.white.opacity(0.9))
+            
+            VStack(alignment: .leading, spacing: 8) {
+                InfoRow(label: "Name", value: selectedConfig.name)
+                InfoRow(label: "Server", value: selectedConfig.serverAddress)
+                InfoRow(label: "Port", value: "\(selectedConfig.port)")
+                InfoRow(label: "Protocol", value: selectedConfig.`protocol`.rawValue.uppercased())
+                InfoRow(label: "Network", value: selectedConfig.network.rawValue)
+                InfoRow(label: "TLS", value: selectedConfig.tls ? "✓ Enabled" : "✗ Disabled")
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+        )
+    }
+    
+    // MARK: - Action Buttons Section
+    var actionButtonsSection: some View {
+        VStack(spacing: 14) {
+            // Connect/Disconnect Button
+            Button(action: {
+                if v2rayManager.isConnected {
+                    v2rayManager.stopV2Ray()
+                } else {
+                    configManager.saveConfig(selectedConfig)
+                    v2rayManager.startV2Ray()
+                }
+            }) {
+                HStack {
+                    Image(systemName: v2rayManager.isConnected ? "stop.circle.fill" : "play.circle.fill")
+                        .font(.title2)
+                    Text(v2rayManager.isConnected ? "Disconnect" : "Connect")
+                        .font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(
+                            v2rayManager.isConnected ?
+                                LinearGradient(colors: [.red, .orange], startPoint: .leading, endPoint: .trailing) :
+                                LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
+                        )
+                        .shadow(color: (v2rayManager.isConnected ? Color.red : Color.blue).opacity(0.4), radius: 15, y: 8)
+                )
+            }
+            .buttonStyle(.plain)
+            
+            // Secondary Actions
+            HStack(spacing: 12) {
+                SecondaryButton(icon: "gearshape.fill", title: "Settings") {
+                    showingPreferences = true
+                }
+                
+                SecondaryButton(icon: "doc.text.fill", title: "Logs") {
+                    showingLogs = true
+                }
+                
+                SecondaryButton(icon: "xmark.circle.fill", title: "Quit") {
+                    v2rayManager.stopV2Ray()
+                    NSApplication.shared.terminate(nil)
+                }
+            }
+        }
         .sheet(isPresented: $showingPreferences) {
             PreferencesView()
                 .frame(width: 600, height: 500)
@@ -167,6 +309,7 @@ struct InfoRow: View {
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.9))
                 .fontWeight(.medium)
+                .lineLimit(1)
         }
     }
 }
@@ -185,12 +328,12 @@ struct SecondaryButton: View {
             }
             .foregroundColor(.white.opacity(0.9))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(.ultraThinMaterial)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.white.opacity(0.2), lineWidth: 1)
                     )
             )
@@ -217,10 +360,17 @@ struct LogsView: View {
             .background(Color.black.opacity(0.3))
             .cornerRadius(8)
             
-            Button("Refresh") {
-                loadLogs()
+            HStack {
+                Button("Refresh") {
+                    loadLogs()
+                }
+                .buttonStyle(.borderedProminent)
+                
+                Button("Close") {
+                    NSApplication.shared.keyWindow?.close()
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.borderedProminent)
         }
         .padding()
         .onAppear {
@@ -233,7 +383,7 @@ struct LogsView: View {
         if let logContent = try? String(contentsOfFile: logPath) {
             logs = logContent.isEmpty ? "No logs yet" : logContent
         } else {
-            logs = "Unable to load logs from: \(logPath)"
+            logs = "Unable to load logs from: \(logPath)\n\nLogs will appear here once you connect to a server."
         }
     }
 }

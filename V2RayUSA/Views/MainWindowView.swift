@@ -11,6 +11,7 @@ struct MainWindowView: View {
     @StateObject private var v2rayManager = V2RayManager.shared
     @StateObject private var configManager = ConfigManager.shared
     @StateObject private var subscriptionManager = SubscriptionManager.shared
+    @StateObject private var systemProxyManager = SystemProxyManager.shared
     @State private var selectedConfig: ServerConfig
     @State private var showingPreferences = false
     @State private var showingLogs = false
@@ -46,6 +47,9 @@ struct MainWindowView: View {
                     // Current Server Info
                     serverInfoSection
                     
+                    // System-Wide Proxy Toggle
+                    systemProxySection
+                    
                     // Action Buttons
                     actionButtonsSection
                 }
@@ -53,7 +57,87 @@ struct MainWindowView: View {
                 .padding(.vertical, 30)
             }
         }
-        .frame(minWidth: 520, minHeight: 700)
+        .frame(minWidth: 520, minHeight: 750)
+        .onAppear {
+            systemProxyManager.checkProxyStatus()
+        }
+    }
+    
+    // MARK: - System Proxy Section
+    var systemProxySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("🌍 System-Wide Routing")
+                    .font(.headline)
+                    .foregroundColor(.white.opacity(0.9))
+                
+                Spacer()
+                
+                // Status indicator
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(systemProxyManager.isSystemProxyEnabled ? Color.green : Color.gray)
+                        .frame(width: 8, height: 8)
+                    Text(systemProxyManager.isSystemProxyEnabled ? "Active" : "Off")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+            }
+            
+            Text("Route ALL traffic through V2Ray so your entire computer appears at the VPN location")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.6))
+            
+            HStack(spacing: 12) {
+                Button(action: {
+                    if systemProxyManager.isSystemProxyEnabled {
+                        systemProxyManager.disableSystemProxyWithAdmin()
+                    } else {
+                        systemProxyManager.enableSystemProxyWithAdmin()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: systemProxyManager.isSystemProxyEnabled ? "globe.badge.chevron.backward" : "globe")
+                        Text(systemProxyManager.isSystemProxyEnabled ? "Disable System Proxy" : "Enable System Proxy")
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(
+                                systemProxyManager.isSystemProxyEnabled ?
+                                    LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing) :
+                                    LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing)
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!v2rayManager.isConnected)
+            }
+            
+            if !v2rayManager.isConnected {
+                Text("⚠️ Connect to a server first to enable system-wide routing")
+                    .font(.caption)
+                    .foregroundColor(.yellow)
+            }
+            
+            if let error = systemProxyManager.lastError {
+                Text("❌ \(error)")
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(systemProxyManager.isSystemProxyEnabled ? Color.green.opacity(0.5) : Color.white.opacity(0.15), lineWidth: 1)
+                )
+        )
     }
     
     // MARK: - Header Section

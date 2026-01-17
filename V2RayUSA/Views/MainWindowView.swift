@@ -405,7 +405,14 @@ struct MainWindowView: View {
             Button(action: {
                 if v2rayManager.isConnected {
                     v2rayManager.stopV2Ray()
+                    // Also disable system proxy if active
+                    if routingMode != .normal {
+                        systemProxyManager.disableSystemProxy()
+                        routingMode = .normal
+                    }
                 } else {
+                    // Pass selected config to V2RayManager
+                    v2rayManager.currentConfig = selectedConfig
                     configManager.saveConfig(selectedConfig)
                     v2rayManager.startV2Ray()
                 }

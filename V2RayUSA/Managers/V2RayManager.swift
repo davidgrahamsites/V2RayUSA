@@ -32,29 +32,39 @@ class V2RayManager: ObservableObject {
             return
         }
         
-        // Load current config or use default
+        // Load current config - prefer explicitly set config, then saved config
         let config = currentConfig ?? configManager.loadDefaultConfig()
         currentConfig = config
         
         // Write config to temp file
         guard let configURL = writeConfigFile(config) else {
-            print("Failed to write config file")
+            print("❌ Failed to write config file")
             return
         }
+        
+        print("📝 Config written to: \(configURL.path)")
+        print("📡 Server: \(config.serverAddress):\(config.port)")
         
         // Get V2Ray binary path
         guard let binaryPath = getV2RayBinaryPath() else {
-            print("V2Ray binary not found")
+            print("❌ V2Ray binary not found")
             return
         }
         
+        print("🔧 V2Ray binary: \(binaryPath)")
+        
         // Start V2Ray process
+        // V2Ray v5.x uses: v2ray run -c /path/to/config.json
         let process = Process()
         process.executableURL = URL(fileURLWithPath: binaryPath)
-        process.arguments = ["-config", configURL.path]
+        process.arguments = ["run", "-c", configURL.path]
         
         // Set up logging
         let logFile = logsDirectory.appendingPathComponent("v2ray.log")
+        
+        // Clear old log
+        try? "".write(to: logFile, atomically: true, encoding: .utf8)
+        
         if !FileManager.default.fileExists(atPath: logFile.path) {
             FileManager.default.createFile(atPath: logFile.path, contents: nil)
         }
@@ -66,13 +76,23 @@ class V2RayManager: ObservableObject {
         do {
             try process.run()
             v2rayProcess = process
-            isConnected = true
             
-            NotificationCenter.default.post(name: NSNotification.Name("V2RayConnectionStatusChanged"), object: nil)
-            
-            print("V2Ray started successfully on SOCKS5 127.0.0.1:1080")
+            // Wait a moment then check if still running
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                if process.isRunning {
+                    self?.isConnected = true
+                    NotificationCenter.default.post(name: NSNotification.Name("V2RayConnectionStatusChanged"), object: nil)
+                    print("✅ V2Ray started successfully on SOCKS5 127.0.0.1:1080")
+                } else {
+                    print("❌ V2Ray process terminated unexpectedly")
+                    // Read log to see error
+                    if let logContent = try? String(contentsOf: logFile) {
+                        print("Log: \(logContent)")
+                    }
+                }
+            }
         } catch {
-            print("Failed to start V2Ray: \(error)")
+            print("❌ Failed to start V2Ray: \(error)")
         }
     }
     

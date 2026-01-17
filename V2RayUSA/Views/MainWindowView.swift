@@ -84,6 +84,15 @@ struct MainWindowView: View {
         .onAppear {
             systemProxyManager.checkProxyStatus()
         }
+        .onChange(of: subscriptionManager.servers) { newServers in
+            // Auto-select first server when fetch completes
+            if let first = newServers.first {
+                selectedConfig = first
+                v2rayManager.currentConfig = first
+                configManager.saveConfig(first)
+                print("✅ Auto-selected server: \(first.name) at \(first.serverAddress)")
+            }
+        }
     }
     
     // MARK: - Routing Mode Section

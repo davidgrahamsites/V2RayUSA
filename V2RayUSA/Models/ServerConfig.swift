@@ -21,7 +21,7 @@ enum NetworkType: String, Codable, CaseIterable {
     case grpc = "grpc"
 }
 
-struct ServerConfig: Codable, Identifiable {
+struct ServerConfig: Codable, Identifiable, Equatable, Hashable {
     let id: UUID
     var name: String
     var serverAddress: String

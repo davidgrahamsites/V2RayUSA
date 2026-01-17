@@ -29,7 +29,7 @@ class SubscriptionManager: ObservableObject {
     
     // Fallback servers loaded on init (GFW blocks GitHub fetch)
     func loadFallbackServers() {
-        // Real pre-loaded server from vmess:// URI
+        // Real pre-loaded servers from vmess:// URIs
         let fallbackConfigs: [ServerConfig] = [
             ServerConfig(
                 name: "Tel: @free_vmess1",
@@ -42,6 +42,19 @@ class SubscriptionManager: ObservableObject {
                 network: .ws,
                 path: "/",
                 host: "Bmi.ir",
+                tls: false
+            ),
+            ServerConfig(
+                name: "V2Ray Vmess-US-11069242",
+                serverAddress: "104.238.162.76",
+                port: 20086,
+                protocol: .vmess,
+                userId: "6cf93fe6-0062-4212-95aa-2aabca8b11bf",
+                alterId: 0,
+                encryption: "auto",
+                network: .ws,
+                path: "/",
+                host: "",
                 tls: false
             ),
         ]

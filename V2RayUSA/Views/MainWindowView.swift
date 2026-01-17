@@ -331,15 +331,15 @@ struct MainWindowView: View {
                 .padding(.vertical, 8)
             
             // Manual vmess:// paste (for users behind GFW)
-            Text("📝 Or Paste vmess:// Link")
+            Text("📝 Or Paste vmess:// Links (one per line)")
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.8))
             
-            HStack(spacing: 8) {
-                TextField("vmess://...", text: $vmessPasteText)
-                    .textFieldStyle(.plain)
+            VStack(spacing: 8) {
+                TextEditor(text: $vmessPasteText)
                     .font(.system(.caption, design: .monospaced))
                     .foregroundColor(.white)
+                    .frame(height: 80)
                     .padding(8)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
@@ -347,18 +347,36 @@ struct MainWindowView: View {
                     )
                 
                 Button(action: {
-                    if let config = subscriptionManager.parseVMessURI(vmessPasteText) {
-                        subscriptionManager.servers.insert(config, at: 0)
+                    // Parse all lines
+                    let lines = vmessPasteText.components(separatedBy: .newlines)
+                    var addedCount = 0
+                    for line in lines {
+                        let trimmed = line.trimmingCharacters(in: .whitespaces)
+                        if trimmed.starts(with: "vmess://"), 
+                           let config = subscriptionManager.parseVMessURI(trimmed) {
+                            subscriptionManager.servers.insert(config, at: 0)
+                            addedCount += 1
+                        }
+                    }
+                    if addedCount > 0 {
                         vmessPasteText = ""
+                        print("✅ Added \(addedCount) server(s) from paste")
                     }
                 }) {
-                    Image(systemName: "plus.circle.fill")
-                        .foregroundColor(.white)
-                        .padding(8)
-                        .background(
-                            Circle()
-                                .fill(LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing))
-                        )
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add All (\(vmessPasteText.components(separatedBy: .newlines).filter { $0.contains("vmess://") }.count))")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(LinearGradient(colors: [.green, .teal], startPoint: .leading, endPoint: .trailing))
+                    )
                 }
                 .buttonStyle(.plain)
                 .disabled(vmessPasteText.isEmpty)

@@ -12,6 +12,7 @@ struct MainWindowView: View {
     @StateObject private var configManager = ConfigManager.shared
     @StateObject private var subscriptionManager = SubscriptionManager.shared
     @StateObject private var systemProxyManager = SystemProxyManager.shared
+    @StateObject private var tunManager = TUNManager.shared
     @State private var selectedConfig: ServerConfig
     @State private var showingPreferences = false
     @State private var showingLogs = false
@@ -177,10 +178,12 @@ struct MainWindowView: View {
     
     func applyRoutingMode(_ mode: RoutingMode) {
         // First disable current mode
+        // Disable previous mode
         if routingMode == .systemProxy {
             systemProxyManager.disableSystemProxy()
+        } else if routingMode == .tunMode {
+            tunManager.disableTUNMode()
         }
-        // TODO: disable TUN mode if active
         
         routingMode = mode
         
@@ -194,9 +197,8 @@ struct MainWindowView: View {
         case .systemProxy:
             systemProxyManager.enableSystemProxyWithAdmin()
         case .tunMode:
-            // TODO: Start tun2socks
-            systemProxyManager.lastError = "TUN mode coming soon - system proxy applied for now"
-            systemProxyManager.enableSystemProxyWithAdmin()
+            // Enable full TUN mode - routes ALL traffic including DNS through VPN
+            tunManager.enableTUNMode()
         }
     }
     
